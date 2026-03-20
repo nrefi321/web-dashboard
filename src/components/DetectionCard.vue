@@ -2,6 +2,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { convertPath, getMedia } from '../utils/mediaHelper.js'
+import { formatBKK } from '../utils/timeHelper.js'
 
 const props = defineProps({
   item:  { type: Object, required: true },
@@ -101,7 +102,7 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
       <div class="meta-row">
         <span class="meta-key">Detected</span>
         <span class="meta-val meta-val--time">
-          {{ item.detected_suspicious_time ? new Date(item.detected_suspicious_time).toLocaleString() : '—' }}
+          {{ formatBKK(item.detected_suspicious_time) }}
         </span>
       </div>
       <!-- Show remark if reviewed -->
@@ -167,7 +168,7 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
 .badge--fail    { background: var(--fail-bg);  color: var(--fail); }
 
 /* Viewer */
-.viewer { display: flex; align-items: center; background: #111; height: 260px; }
+.viewer { display: flex; align-items: center; background: #111; height: 500px; }
 .nav-btn {
   flex-shrink: 0; width: 30px; height: 100%;
   background: transparent; border: none; color: rgba(255,255,255,.4);
@@ -177,7 +178,7 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
 .nav-btn:hover { color: #fff; background: rgba(255,255,255,.06); }
 
 .media-frame { flex: 1; height: 100%; position: relative; overflow: hidden; }
-.media-frame img, .media-frame video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.media-frame img, .media-frame video { width: 100%; height: 100%; object-fit: cover; display: block; }
 
 .media-label {
   position: absolute; top: 7px; left: 7px; z-index: 2;

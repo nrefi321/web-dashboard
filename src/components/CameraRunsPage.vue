@@ -2,6 +2,7 @@
 <script setup>
 import { onMounted, computed } from 'vue'
 import { useCameraRuns, TASKS } from '../composables/useCameraRuns.js'
+import { formatBKK } from '../utils/timeHelper.js'
 
 const { runs, loading, error, activeTask, counts, loadRuns, loadAllCounts } = useCameraRuns()
 
@@ -12,10 +13,7 @@ onMounted(() => {
 
 const activeTaskInfo = computed(() => TASKS.find(t => t.key === activeTask.value))
 
-function formatTime(iso) {
-  if (!iso) return '—'
-  return new Date(iso).toLocaleString()
-}
+function formatTime(iso) { return formatBKK(iso) }
 
 function duration(start, end) {
   if (!start || !end) return '—'
