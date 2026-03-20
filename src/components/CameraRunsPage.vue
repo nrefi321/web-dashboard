@@ -259,8 +259,8 @@ function statusColor(task) {
   width: 100%;
 }
 .task-btn:hover { background: var(--surface2); }
-.task-btn.active { background: var(--text); color: #fff; }
-.task-btn.active .task-count { background: rgba(255,255,255,.15); color: rgba(255,255,255,.8); }
+.task-btn.active { background: var(--accent-bg, var(--text)); color: var(--accent-text, #fff); }
+.task-btn.active .task-count { background: rgba(128,128,128,.2); color: var(--accent-text, #fff); }
 
 .task-label { flex: 1; }
 
@@ -313,7 +313,7 @@ function statusColor(task) {
 }
 
 .btn-reload {
-  background: var(--text); color: #fff; border: none;
+  background: var(--accent-bg, var(--text)); color: var(--accent-text, #fff); border: none;
   padding: 5px 14px; border-radius: var(--radius-sm);
   font-size: 13px; font-family: var(--font); cursor: pointer; transition: opacity .15s;
 }

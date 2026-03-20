@@ -181,7 +181,7 @@ function onSelectNvr(plant, area, nvr) {
   flex-shrink: 0;
   background: var(--surface);
   border-right: 1px solid var(--border);
-  transition: width 0.22s ease;
+  transition: width 0.22s ease, background 0.2s ease;
   overflow: hidden;
 }
 .sidebar.collapsed { width: 0; }
@@ -220,15 +220,15 @@ function onSelectNvr(plant, area, nvr) {
   background: none; border: none; cursor: pointer;
   padding: 4px 8px 4px 4px; border-radius: 6px;
   font-family: var(--font); text-align: left; color: var(--text);
-  transition: background .12s; min-width: 0;
+  transition: background .12s, color .12s; min-width: 0;
 }
-.tree-node:hover { background: var(--surface2); }
-.tree-node.active { background: var(--text); color: #fff; }
+.tree-node:hover { background: var(--surface2); color: var(--text); }
+.tree-node.active { background: var(--accent-bg, var(--text)); color: var(--accent-text, #fff); }
 
-.node-icon { flex-shrink: 0; opacity: 0.5; }
+.node-icon { flex-shrink: 0; opacity: 0.5; color: currentColor; }
 .tree-node.active .node-icon { opacity: 0.9; }
 
-.node-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node-label { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: currentColor; }
 
 .node-count {
   flex-shrink: 0; font-family: var(--font-mono); font-size: 10px;

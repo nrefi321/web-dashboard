@@ -211,7 +211,7 @@ function changePage(page) {
 .count-filtered { color: var(--text); font-weight: 600; }
 .count-sep { margin: 0 2px; color: var(--border2); }
 .btn-reload {
-  background: var(--text); color: #fff; border: none;
+  background: var(--accent-bg, var(--text)); color: var(--accent-text, #fff); border: none;
   padding: 5px 14px; border-radius: var(--radius-sm);
   font-size: 13px; font-family: var(--font); cursor: pointer; transition: opacity .15s;
 }

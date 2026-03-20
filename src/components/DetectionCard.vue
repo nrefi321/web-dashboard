@@ -3,6 +3,7 @@
 import { ref, computed } from 'vue'
 import { convertPath, getMedia } from '../utils/mediaHelper.js'
 import { formatBKK } from '../utils/timeHelper.js'
+import Lightbox from './Lightbox.vue'
 
 const props = defineProps({
   item:  { type: Object, required: true },
@@ -17,6 +18,17 @@ const mediaList = getMedia(props.item)
 function next() { mediaIdx.value = (mediaIdx.value + 1) % mediaList.length }
 function prev() { mediaIdx.value = (mediaIdx.value - 1 + mediaList.length) % mediaList.length }
 const current = () => mediaList[mediaIdx.value]
+
+// Lightbox
+const lightboxOpen = ref(false)
+const lightboxIdx  = ref(0)
+
+function openLightbox(idx) {
+  if (mediaList[idx]?.src) {
+    lightboxIdx.value = idx
+    lightboxOpen.value = true
+  }
+}
 
 // API fields:
 //   verify_status: false, verify_result: false, remark: null  → Pending
@@ -65,7 +77,12 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
       <div class="media-frame">
         <div class="media-label">{{ current().label }}</div>
         <template v-if="current().type === 'image'">
-          <img :src="convertPath(current().src)" :alt="current().label" />
+          <img
+            :src="convertPath(current().src)"
+            :alt="current().label"
+            class="clickable-img"
+            @click="openLightbox(mediaIdx)"
+          />
         </template>
         <template v-else>
           <video controls preload="metadata">
@@ -143,6 +160,15 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
     </div>
 
   </div>
+
+  <!-- Lightbox -->
+  <Lightbox
+    :show="lightboxOpen"
+    :media-list="mediaList.map(m => ({ ...m, src: convertPath(m.src) }))"
+    :start-idx="lightboxIdx"
+    @close="lightboxOpen = false"
+  />
+
 </template>
 
 <style scoped>
@@ -168,7 +194,7 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
 .badge--fail    { background: var(--fail-bg);  color: var(--fail); }
 
 /* Viewer */
-.viewer { display: flex; align-items: center; background: #111; height: 500px; }
+.viewer { display: flex; align-items: center; background: #111; height: 260px; }
 .nav-btn {
   flex-shrink: 0; width: 30px; height: 100%;
   background: transparent; border: none; color: rgba(255,255,255,.4);
@@ -178,7 +204,9 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
 .nav-btn:hover { color: #fff; background: rgba(255,255,255,.06); }
 
 .media-frame { flex: 1; height: 100%; position: relative; overflow: hidden; }
-.media-frame img, .media-frame video { width: 100%; height: 100%; object-fit: cover; display: block; }
+.media-frame img, .media-frame video { width: 100%; height: 100%; object-fit: contain; display: block; }
+.clickable-img { cursor: zoom-in; transition: opacity .15s; }
+.clickable-img:hover { opacity: 0.9; }
 
 .media-label {
   position: absolute; top: 7px; left: 7px; z-index: 2;
