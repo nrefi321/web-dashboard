@@ -8,15 +8,26 @@ const emit = defineEmits(['clear', 'select-plant', 'select-area', 'select-nvr'])
 </script>
 
 <template>
-  <div class="breadcrumb" v-if="filter.plant">
+  <div class="breadcrumb" v-if="filter.verifyGroup || filter.plant">
     <button class="crumb" @click="emit('clear')">All</button>
-    <span class="crumb-sep">›</span>
 
-    <button
-      class="crumb"
-      :class="{ active: !filter.area }"
-      @click="emit('select-plant', filter.plant)"
-    >{{ filter.plant }}</button>
+    <template v-if="filter.verifyGroup">
+      <span class="crumb-sep">›</span>
+      <button
+        class="crumb"
+        :class="{ active: !filter.plant }"
+        @click="emit('select-plant', null)"
+      >{{ filter.verifyGroup === 'verified' ? 'Verified' : 'Unverified' }}</button>
+    </template>
+
+    <template v-if="filter.plant">
+      <span class="crumb-sep">›</span>
+      <button
+        class="crumb"
+        :class="{ active: !filter.area }"
+        @click="emit('select-plant', filter.plant)"
+      >{{ filter.plant }}</button>
+    </template>
 
     <template v-if="filter.area">
       <span class="crumb-sep">›</span>

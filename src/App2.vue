@@ -167,12 +167,12 @@ body {
   --text:      #1a1a18;
   --muted:     #8a8a84;
   --tree-line: #e0e0dc;
-  --pass:      #16803c;
-  --pass-bg:   #dcfce7;
-  --fail:      #dc2626;
-  --fail-bg:   #fee2e2;
+  --pass:      #15803d;
+  --pass-bg:   #86efac;
+  --fail:      #b91c1c;
+  --fail-bg:   #fca5a5;
   --warn:      #b45309;
-  --warn-bg:   #fef3c7;
+  --warn-bg:   #fcd34d;
   --sidebar-w: 240px;
   --header-h:  52px;
   --title-h:   44px;

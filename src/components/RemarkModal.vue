@@ -17,11 +17,14 @@ watch(() => props.show, (val) => {
 })
 
 function submit() {
-  // remark is optional — send null if empty so API gets correct unreviewed state
+  if (!remarkText.value.trim()) {
+    alert("Please enter a remark before confirming.")
+    return
+  }
   emit('submit', {
     id:     props.item?.id,
     action: props.actionType,
-    remark: remarkText.value.trim() || null,
+    remark: remarkText.value.trim(),
   })
 }
 </script>
@@ -33,7 +36,8 @@ function submit() {
 
         <div class="modal-header">
           <div class="modal-title">
-            <span class="modal-action-pill" :class="actionType === 'PASS' ? 'pill--pass' : 'pill--fail'">
+            <span class="modal-action-pill"
+              :class="actionType === 'NORMAL' ? 'pill--normal' : 'pill--suspected'">
               {{ actionType }}
             </span>
             <span class="modal-id">Record #{{ item?.id }}</span>
@@ -48,7 +52,7 @@ function submit() {
         <textarea
           v-model="remarkText"
           class="modal-textarea"
-          placeholder="Add a remark…"
+          placeholder="Remark is required…"
           rows="4"
           autofocus
         ></textarea>
@@ -57,7 +61,9 @@ function submit() {
           <button class="btn btn--ghost" @click="emit('close')">Cancel</button>
           <button
             class="btn"
-            :class="actionType === 'PASS' ? 'btn--pass' : 'btn--fail'"
+            :class="actionType === 'NORMAL' ? 'btn--normal' : 'btn--suspected'"
+            :disabled="!remarkText.trim()"
+            :style="{ opacity: remarkText.trim() ? 1 : 0.4, cursor: remarkText.trim() ? 'pointer' : 'not-allowed' }"
             @click="submit"
           >
             Confirm {{ actionType }}
@@ -83,8 +89,8 @@ function submit() {
 .modal-header { display: flex; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--border); }
 .modal-title  { display: flex; align-items: center; gap: 10px; }
 .modal-action-pill { font-size: 11px; font-weight: 600; letter-spacing: .05em; padding: 3px 9px; border-radius: 99px; }
-.pill--pass { background: var(--pass-bg); color: var(--pass); }
-.pill--fail { background: var(--fail-bg); color: var(--fail); }
+.pill--normal    { background: var(--pass-bg); color: var(--pass); }
+.pill--suspected { background: var(--warn-bg); color: var(--warn); }
 .modal-id   { font-family: var(--font-mono); font-size: 13px; color: var(--muted); }
 .modal-close {
   background: none; border: none; cursor: pointer; color: var(--muted);
@@ -104,8 +110,8 @@ function submit() {
 .btn { padding: 7px 16px; border-radius: var(--radius-sm); border: none; font-family: var(--font); font-size: 13px; font-weight: 500; cursor: pointer; transition: opacity .12s; }
 .btn:hover { opacity: .8; }
 .btn--ghost { background: var(--surface2); color: var(--muted); }
-.btn--pass  { background: var(--pass); color: #fff; }
-.btn--fail  { background: var(--fail); color: #fff; }
+.btn--normal    { background: var(--pass); color: #fff; }
+.btn--suspected { background: var(--warn); color: #fff; }
 
 .modal-enter-active, .modal-leave-active { transition: opacity .18s ease; }
 .modal-enter-active .modal, .modal-leave-active .modal { transition: transform .18s ease, opacity .18s ease; }

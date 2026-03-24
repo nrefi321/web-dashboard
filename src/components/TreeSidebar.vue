@@ -1,53 +1,60 @@
 <!-- components/TreeSidebar.vue -->
 <script setup>
 import { ref } from 'vue'
+import TreePlantChildren from './TreePlantChildren.vue'
 
 const props = defineProps({
-  open:          { type: Boolean, default: true },
-  tree:          { type: Object,  default: () => ({}) },
-  filter:        { type: Object,  required: true },
-  totalCount:    { type: Number,  default: 0 },
-  countPlant:    { type: Function, required: true },
-  countArea:     { type: Function, required: true },
-  countNvr:      { type: Function, required: true },
-  countCam:      { type: Function, required: true },
-  isActiveNode:  { type: Function, required: true },
+  open:           { type: Boolean,  default: true },
+  tree:           { type: Object,   default: () => ({}) },
+  filter:         { type: Object,   required: true },
+  totalCount:     { type: Number,   default: 0 },
+  countGroup:     { type: Function, required: true },
+  countPlant:     { type: Function, required: true },
+  countArea:      { type: Function, required: true },
+  countNvr:       { type: Function, required: true },
+  countCam:       { type: Function, required: true },
+  isActiveNode:   { type: Function, required: true },
 })
 
 const emit = defineEmits([
-  'clear-filter',
-  'select-plant',
-  'select-area',
-  'select-nvr',
-  'select-cam',
+  'clear-filter', 'select-verify-group',
+  'select-plant', 'select-area', 'select-nvr', 'select-cam',
 ])
 
-// Local expand state lives here — purely UI, not part of business logic
+const expandedGroups = ref({ unverified: true, verified: false })
 const expanded = ref({ plants: {}, areas: {}, nvrs: {} })
 
-function togglePlant(plant) {
-  expanded.value.plants[plant] = !expanded.value.plants[plant]
+function toggleGroup(group) {
+  expandedGroups.value[group] = !expandedGroups.value[group]
 }
-function toggleArea(plant, area) {
-  expanded.value.areas[`${plant}__${area}`] = !expanded.value.areas[`${plant}__${area}`]
+function togglePlant(group, plant) {
+  const key = `${group}__${plant}`
+  expanded.value.plants[key] = !expanded.value.plants[key]
 }
-function toggleNvr(plant, area, nvr) {
-  expanded.value.nvrs[`${plant}__${area}__${nvr}`] = !expanded.value.nvrs[`${plant}__${area}__${nvr}`]
+function toggleArea(group, plant, area) {
+  const key = `${group}__${plant}__${area}`
+  expanded.value.areas[key] = !expanded.value.areas[key]
+}
+function toggleNvr(group, plant, area, nvr) {
+  const key = `${group}__${plant}__${area}__${nvr}`
+  expanded.value.nvrs[key] = !expanded.value.nvrs[key]
 }
 
-function onSelectPlant(plant) {
-  emit('select-plant', plant)
-  if (!expanded.value.plants[plant]) expanded.value.plants[plant] = true
+function onSelectGroup(group) {
+  emit('select-verify-group', group)
+  expandedGroups.value[group] = true
 }
-function onSelectArea(plant, area) {
-  emit('select-area', plant, area)
-  const key = `${plant}__${area}`
-  if (!expanded.value.areas[key]) expanded.value.areas[key] = true
+function onSelectPlant(group, plant) {
+  emit('select-plant', group, plant)
+  expanded.value.plants[`${group}__${plant}`] = true
 }
-function onSelectNvr(plant, area, nvr) {
-  emit('select-nvr', plant, area, nvr)
-  const key = `${plant}__${area}__${nvr}`
-  if (!expanded.value.nvrs[key]) expanded.value.nvrs[key] = true
+function onSelectArea(group, plant, area) {
+  emit('select-area', group, plant, area)
+  expanded.value.areas[`${group}__${plant}__${area}`] = true
+}
+function onSelectNvr(group, plant, area, nvr) {
+  emit('select-nvr', group, plant, area, nvr)
+  expanded.value.nvrs[`${group}__${plant}__${area}__${nvr}`] = true
 }
 </script>
 
@@ -59,7 +66,7 @@ function onSelectNvr(plant, area, nvr) {
       <div class="tree-root">
         <button
           class="tree-node tree-node--root"
-          :class="{ active: !filter.plant }"
+          :class="{ active: !filter.verifyGroup && !filter.plant }"
           @click="emit('clear-filter')"
         >
           <svg class="node-icon" width="13" height="13" viewBox="0 0 13 13" fill="none">
@@ -73,99 +80,113 @@ function onSelectNvr(plant, area, nvr) {
         </button>
       </div>
 
-      <div class="tree-section-title">Plants</div>
-
-      <!-- Plant -->
-      <div v-for="(areas, plant) in tree" :key="plant">
+      <!-- Unverified Group -->
+      <div class="group-section">
         <div class="tree-row">
-          <button class="tree-chevron" @click="togglePlant(plant)">
+          <button class="tree-chevron" @click="toggleGroup('unverified')">
             <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-              :style="{ transform: expanded.plants[plant] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
+              :style="{ transform: expandedGroups.unverified ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
               <path d="M3 2L7 5L3 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
             </svg>
           </button>
           <button
-            class="tree-node tree-node--plant"
-            :class="{ active: isActiveNode(plant) }"
-            @click="onSelectPlant(plant)"
+            class="tree-node tree-node--group tree-node--unverified"
+            :class="{ active: filter.verifyGroup === 'unverified' && !filter.plant }"
+            @click="onSelectGroup('unverified')"
           >
-            <svg class="node-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
-              <path d="M2 10V5L6 2L10 5V10H7.5V7.5H4.5V10H2Z" fill="currentColor" opacity="0.75"/>
-            </svg>
-            <span class="node-label">{{ plant }}</span>
-            <span class="node-count">{{ countPlant(plant) }}</span>
+            <span class="group-dot group-dot--unverified"></span>
+            <span class="node-label">Unverified</span>
+            <span class="node-count">{{ countGroup('unverified') }}</span>
           </button>
         </div>
 
-        <!-- Area -->
-        <div v-if="expanded.plants[plant]" class="tree-children">
-          <div v-for="(nvrs, area) in areas" :key="area">
+        <div v-if="expandedGroups.unverified" class="tree-children">
+          <div v-for="(areas, plant) in tree.unverified" :key="'u-' + plant">
             <div class="tree-row">
-              <button class="tree-chevron" @click="toggleArea(plant, area)">
+              <button class="tree-chevron" @click="togglePlant('unverified', plant)">
                 <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                  :style="{ transform: expanded.areas[`${plant}__${area}`] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
+                  :style="{ transform: expanded.plants['unverified__' + plant] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
                   <path d="M3 2L7 5L3 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
                 </svg>
               </button>
               <button
-                class="tree-node tree-node--area"
-                :class="{ active: isActiveNode(plant, area) }"
-                @click="onSelectArea(plant, area)"
+                class="tree-node tree-node--plant"
+                :class="{ active: isActiveNode('unverified', plant) }"
+                @click="onSelectPlant('unverified', plant)"
               >
                 <svg class="node-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                  <rect x="1.5" y="3" width="9" height="7" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                  <path d="M4 3V2.5C4 1.67 4.67 1 5.5 1H6.5C7.33 1 8 1.67 8 2.5V3" stroke="currentColor" stroke-width="1.2"/>
+                  <path d="M2 10V5L6 2L10 5V10H7.5V7.5H4.5V10H2Z" fill="currentColor" opacity="0.75"/>
                 </svg>
-                <span class="node-label">{{ area }}</span>
-                <span class="node-count">{{ countArea(plant, area) }}</span>
+                <span class="node-label">{{ plant }}</span>
+                <span class="node-count">{{ countPlant(plant, 'unverified') }}</span>
               </button>
             </div>
+            <div v-if="expanded.plants['unverified__' + plant]" class="tree-children">
+              <TreePlantChildren
+                :areas="areas" :plant="plant" group="unverified"
+                :expanded="expanded" :filter="filter"
+                :count-area="countArea" :count-nvr="countNvr" :count-cam="countCam"
+                :is-active-node="isActiveNode"
+                @toggle-area="toggleArea" @toggle-nvr="toggleNvr"
+                @select-area="onSelectArea" @select-nvr="onSelectNvr"
+                @select-cam="(p,a,n,c) => emit('select-cam', p, a, n, c)"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
-            <!-- NVR -->
-            <div v-if="expanded.areas[`${plant}__${area}`]" class="tree-children">
-              <div v-for="(cameras, nvr) in nvrs" :key="nvr">
-                <div class="tree-row">
-                  <button class="tree-chevron" @click="toggleNvr(plant, area, nvr)">
-                    <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
-                      :style="{ transform: expanded.nvrs[`${plant}__${area}__${nvr}`] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
-                      <path d="M3 2L7 5L3 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
-                    </svg>
-                  </button>
-                  <button
-                    class="tree-node tree-node--nvr"
-                    :class="{ active: isActiveNode(plant, area, nvr) }"
-                    @click="onSelectNvr(plant, area, nvr)"
-                  >
-                    <svg class="node-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                      <rect x="1" y="3.5" width="8" height="5" rx="1" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                      <path d="M9 5.5L11 4.5V7.5L9 6.5" stroke="currentColor" stroke-width="1.2" stroke-linejoin="round"/>
-                      <circle cx="4.5" cy="6" r="1" fill="currentColor" opacity="0.7"/>
-                    </svg>
-                    <span class="node-label">{{ nvr }}</span>
-                    <span class="node-count">{{ countNvr(plant, area, nvr) }}</span>
-                  </button>
-                </div>
+      <!-- Verified Group -->
+      <div class="group-section">
+        <div class="tree-row">
+          <button class="tree-chevron" @click="toggleGroup('verified')">
+            <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+              :style="{ transform: expandedGroups.verified ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
+              <path d="M3 2L7 5L3 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </button>
+          <button
+            class="tree-node tree-node--group tree-node--verified"
+            :class="{ active: filter.verifyGroup === 'verified' && !filter.plant }"
+            @click="onSelectGroup('verified')"
+          >
+            <span class="group-dot group-dot--verified"></span>
+            <span class="node-label">Verified</span>
+            <span class="node-count">{{ countGroup('verified') }}</span>
+          </button>
+        </div>
 
-                <!-- Camera CH -->
-                <div v-if="expanded.nvrs[`${plant}__${area}__${nvr}`]" class="tree-children">
-                  <div v-for="cam in [...cameras].sort()" :key="cam" class="tree-row">
-                    <span class="tree-cam-indent"></span>
-                    <button
-                      class="tree-node tree-node--cam"
-                      :class="{ active: isActiveNode(plant, area, nvr, cam) }"
-                      @click="emit('select-cam', plant, area, nvr, cam)"
-                    >
-                      <svg class="node-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
-                        <circle cx="6" cy="6" r="2.2" stroke="currentColor" stroke-width="1.2" fill="none"/>
-                        <circle cx="6" cy="6" r="0.8" fill="currentColor"/>
-                      </svg>
-                      <span class="node-label">CH {{ cam }}</span>
-                      <span class="node-count">{{ countCam(plant, area, nvr, cam) }}</span>
-                    </button>
-                  </div>
-                </div>
-
-              </div>
+        <div v-if="expandedGroups.verified" class="tree-children">
+          <div v-for="(areas, plant) in tree.verified" :key="'v-' + plant">
+            <div class="tree-row">
+              <button class="tree-chevron" @click="togglePlant('verified', plant)">
+                <svg width="10" height="10" viewBox="0 0 10 10" fill="none"
+                  :style="{ transform: expanded.plants['verified__' + plant] ? 'rotate(90deg)' : 'rotate(0)', transition: 'transform .18s' }">
+                  <path d="M3 2L7 5L3 8" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </button>
+              <button
+                class="tree-node tree-node--plant"
+                :class="{ active: isActiveNode('verified', plant) }"
+                @click="onSelectPlant('verified', plant)"
+              >
+                <svg class="node-icon" width="12" height="12" viewBox="0 0 12 12" fill="none">
+                  <path d="M2 10V5L6 2L10 5V10H7.5V7.5H4.5V10H2Z" fill="currentColor" opacity="0.75"/>
+                </svg>
+                <span class="node-label">{{ plant }}</span>
+                <span class="node-count">{{ countPlant(plant, 'verified') }}</span>
+              </button>
+            </div>
+            <div v-if="expanded.plants['verified__' + plant]" class="tree-children">
+              <TreePlantChildren
+                :areas="areas" :plant="plant" group="verified"
+                :expanded="expanded" :filter="filter"
+                :count-area="countArea" :count-nvr="countNvr" :count-cam="countCam"
+                :is-active-node="isActiveNode"
+                @toggle-area="toggleArea" @toggle-nvr="toggleNvr"
+                @select-area="onSelectArea" @select-nvr="onSelectNvr"
+                @select-cam="(p,a,n,c) => emit('select-cam', p, a, n, c)"
+              />
             </div>
           </div>
         </div>
@@ -196,13 +217,18 @@ function onSelectNvr(plant, area, nvr) {
 .sidebar-scroll::-webkit-scrollbar { width: 4px; }
 .sidebar-scroll::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 2px; }
 
-.tree-section-title {
-  padding: 10px 14px 4px;
-  font-size: 10px; font-weight: 600;
-  letter-spacing: .08em; text-transform: uppercase;
-  color: var(--muted);
-}
 .tree-root { padding: 0 8px 2px; }
+.group-section { margin-top: 4px; }
+
+.tree-node--group { font-size: 12.5px; font-weight: 600; letter-spacing: 0.01em; }
+
+.group-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.group-dot--unverified { background: #f87171; }
+.group-dot--verified   { background: #34d468; }
 .tree-row { display: flex; align-items: center; gap: 1px; }
 
 .tree-chevron {

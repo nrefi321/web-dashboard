@@ -38,7 +38,7 @@ function openLightbox(idx) {
 const isReviewed    = computed(() =>
   props.item._reviewed || props.item.verify_status === true
 )
-const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' : 'FAIL')
+const reviewedLabel = computed(() => props.item.verify_result === true ? 'Normal' : 'Suspected')
 </script>
 
 <template>
@@ -49,9 +49,9 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
       <span class="card-id">#{{ item.id }}</span>
       <span class="badge"
         :class="{
-          'badge--ok':      isReviewed && item.verify_result === true,
-          'badge--fail':    isReviewed && item.verify_result === false,
-          'badge--pending': !isReviewed,
+          'badge--normal':    isReviewed && item.verify_result === true,
+          'badge--suspected': isReviewed && item.verify_result === false,
+          'badge--pending':   !isReviewed,
         }"
       >
         <template v-if="isReviewed">
@@ -59,7 +59,7 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
             <path d="M1 4.5L3.5 7L8 1.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <svg v-else width="9" height="9" viewBox="0 0 9 9" fill="none">
-            <path d="M1.5 1.5L7.5 7.5M7.5 1.5L1.5 7.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
+            <path d="M4.5 1L4.5 5.5M4.5 7v.5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"/>
           </svg>
           {{ reviewedLabel }}
         </template>
@@ -90,12 +90,12 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
           </video>
         </template>
         <!-- Reviewed overlay -->
-        <div v-if="isReviewed" class="reviewed-overlay" :class="item.verify_result === true ? 'overlay--pass' : 'overlay--fail'">
+        <div v-if="isReviewed" class="reviewed-overlay" :class="item.verify_result === true ? 'overlay--normal' : 'overlay--suspected'">
           <svg v-if="item.verify_result === true" width="32" height="32" viewBox="0 0 32 32" fill="none">
             <path d="M5 16L12 23L27 8" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
           <svg v-else width="32" height="32" viewBox="0 0 32 32" fill="none">
-            <path d="M7 7L25 25M25 7L7 25" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M16 6L16 20M16 24v1" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
           </svg>
           <span>{{ reviewedLabel }}</span>
         </div>
@@ -133,17 +133,19 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
     <div class="card-actions">
 
       <template v-if="!isReviewed">
-        <button class="action-btn action-btn--pass" @click="emit('open-modal', 'PASS', item)">
+        <!-- Suspected = verify_result: false (orange) -->
+        <button class="action-btn action-btn--suspected" @click="emit('open-modal', 'SUSPECTED', item)">
+          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
+            <path d="M6.5 2L6.5 7.5M6.5 10v.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          </svg>
+          Suspected
+        </button>
+        <!-- Normal = verify_result: true (green) -->
+        <button class="action-btn action-btn--normal" @click="emit('open-modal', 'NORMAL', item)">
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <path d="M2 6.5L5.5 10L11 3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
-          Pass
-        </button>
-        <button class="action-btn action-btn--fail" @click="emit('open-modal', 'FAIL', item)">
-          <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
-            <path d="M3 3L10 10M10 3L3 10" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
-          </svg>
-          Fail
+          Normal
         </button>
       </template>
 
@@ -189,9 +191,9 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
   display: inline-flex; align-items: center; gap: 4px;
   font-size: 11px; font-weight: 500; padding: 2px 8px; border-radius: 99px;
 }
-.badge--pending { background: var(--warn-bg);  color: var(--warn); }
-.badge--ok      { background: var(--pass-bg);  color: var(--pass); }
-.badge--fail    { background: var(--fail-bg);  color: var(--fail); }
+.badge--pending   { background: var(--surface2); color: var(--muted); }
+.badge--normal    { background: var(--pass-bg);  color: var(--pass);  font-weight: 600; }
+.badge--suspected { background: var(--warn-bg);  color: var(--warn);  font-weight: 600; }
 
 /* Viewer */
 .viewer { display: flex; align-items: center; background: #111; height: 260px; }
@@ -223,14 +225,8 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
   font-size: 11px; font-weight: 700; letter-spacing: .08em;
   pointer-events: none;
 }
-.overlay--pass {
-  background: rgba(22, 128, 60, 0.55);
-  color: #fff;
-}
-.overlay--fail {
-  background: rgba(192, 57, 43, 0.55);
-  color: #fff;
-}
+.overlay--normal    { background: rgba(22,128,60,0.55);  color: #fff; }
+.overlay--suspected { background: rgba(202,138,4,0.65);  color: #fff; }
 
 .dots { position: absolute; bottom: 7px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; z-index: 4; }
 .dot { width: 5px; height: 5px; border-radius: 50%; background: rgba(255,255,255,.3); cursor: pointer; transition: background .12s, transform .12s; }
@@ -248,12 +244,21 @@ const reviewedLabel = computed(() => props.item.verify_result === true ? 'PASS' 
 .card-actions { display: grid; grid-template-columns: 1fr 1fr; }
 .action-btn {
   display: flex; align-items: center; justify-content: center; gap: 5px;
-  padding: 9px; border: none; font-family: var(--font); font-size: 12px;
-  font-weight: 500; cursor: pointer; transition: opacity .12s;
+  padding: 12px; border: none; font-family: var(--font); font-size: 15px;
+  font-weight: 700; cursor: pointer; transition: opacity .12s;
 }
 .action-btn:hover { opacity: .8; }
-.action-btn--pass   { background: var(--pass-bg); color: var(--pass); border-right: 1px solid var(--border); }
-.action-btn--fail   { background: var(--fail-bg); color: var(--fail); }
+.action-btn--suspected {
+  background: var(--warn-bg);
+  color: var(--warn);
+  border-right: 1px solid var(--border);
+  font-weight: 600;
+}
+.action-btn--normal {
+  background: var(--pass-bg);
+  color: var(--pass);
+  font-weight: 600;
+}
 .action-btn--revert {
   grid-column: span 2;
   background: var(--surface2); color: var(--muted);
